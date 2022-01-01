@@ -21,8 +21,13 @@ public class Server : Node
 	public override void _Ready()
 	{
 		CreateUdpClient(mainIp, mainPort);
-		SendData("hello client, i'm the server :D");
-		SendData(7);
+
+		using (Packet packet = new Packet())
+		{
+			packet.WriteData("hi");
+
+			SendPacket(packet);
+		}
 	}
 
 	public static void CreateUdpClient(string ip, string port)
@@ -32,83 +37,21 @@ public class Server : Node
 		udpState.packetCount = 0;
 	}
 
-	// Byte array integer prefixes:
-	// 0 = bool
-	// 1 = integer
-	// 2 = float
-	// 3 = string
-	public static void SendData(bool data)
+	public static void SendPacket(Packet packet)
 	{
-		// Integer prefix for byte array
-		int prefix = 0;
+		// Write packet header
+		packet.WritePacketHeader();
 
-		// Create a byte list with the prefix
-		List<byte> byteList = new List<byte>(BitConverter.GetBytes(prefix));
-		byteList.AddRange(BitConverter.GetBytes(data));
-
-		byte[] byteArray = byteList.ToArray();
+		// Get data from packet
+		byte[] packetData = packet.ReturnData();
 
 		// Send the message (the destination is defined by the server name and port)
-		udpState.udpClient.BeginSend(byteArray, byteArray.Length, udpState.endPoint, new AsyncCallback(SendCallback), udpState.udpClient);
+		udpState.udpClient.BeginSend(packetData, packetData.Length, udpState.endPoint, new AsyncCallback(SendPacketCallback), udpState.udpClient);
 	}
-	public static void SendData(int data)
-	{
-		// Integer prefix for byte array
-		int prefix = 1;
-
-		// Create a byte list with the prefix
-		List<byte> byteList = new List<byte>(BitConverter.GetBytes(prefix));
-		byteList.AddRange(BitConverter.GetBytes(data));
-
-		byte[] byteArray = byteList.ToArray();
-
-		// Send the message (the destination is defined by the server name and port)
-		udpState.udpClient.BeginSend(byteArray, byteArray.Length, udpState.endPoint, new AsyncCallback(SendCallback), udpState.udpClient);
-	}
-	public static void SendData(float data)
-	{
-		// Integer prefix for byte array
-		int prefix = 2;
-
-		// Create a byte list with the prefix
-		List<byte> byteList = new List<byte>(BitConverter.GetBytes(prefix));
-		byteList.AddRange(BitConverter.GetBytes(data));
-
-		byte[] byteArray = byteList.ToArray();
-
-		// Send the message (the destination is defined by the server name and port)
-		udpState.udpClient.BeginSend(byteArray, byteArray.Length, udpState.endPoint, new AsyncCallback(SendCallback), udpState.udpClient);
-	}
-	public static void SendData(string data)
-	{
-		// Integer prefix for byte array
-		int prefix = 3;
-
-		// Create a byte list with the prefix
-		List<byte> byteList = new List<byte>(BitConverter.GetBytes(prefix));
-		byteList.AddRange(Encoding.UTF8.GetBytes(data));
-
-		byte[] byteArray = byteList.ToArray();
-
-		// Debug stuff for my sanity :)
-		// GD.Print($"length of prefix: {BitConverter.GetBytes(prefix).Length}");
-		// GD.Print($"prefix: {BitConverter.ToInt32(byteArray, 0)}");
-		// GD.Print($"data: {Encoding.UTF8.GetString(byteArray, 4, byteArray.Length - 4)}");
-		// GD.Print($"byte array: {ToReadableByteArray(byteArray)}");
-
-		// Send the message (the destination is defined by the server name and port)
-		udpState.udpClient.BeginSend(byteArray, byteArray.Length, udpState.endPoint, new AsyncCallback(SendCallback), udpState.udpClient);
-	}
-	private static void SendCallback(IAsyncResult asyncResult)
+	private static void SendPacketCallback(IAsyncResult asyncResult)
 	{
 		UdpClient udpClient = (UdpClient)asyncResult.AsyncState;
 
 		GD.Print($"number of bytes sent: {udpClient.EndSend(asyncResult)}");
-	}
-
-	// Debug function for my sanity :)
-	public static string ToReadableByteArray(byte[] bytes)
-	{
-		return string.Join(", ", bytes);
 	}
 }
