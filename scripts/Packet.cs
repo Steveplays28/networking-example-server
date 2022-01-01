@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 using Godot;
 
 /// <summary>
-/// Writeable packet, dispose using Dispose().
+/// Writeable packet, dispose using Dispose() when the packet is no longer in use.
 /// </summary>
 public class Packet : IDisposable
 {
@@ -40,37 +40,48 @@ public class Packet : IDisposable
 	// 1 = integer
 	// 2 = float
 	// 3 = string
+	#region WriteData
 	public void WriteData(bool data)
 	{
-		// Write type of data (integer) to packet
-		binaryWriter.Write(0);
+		// Write data type prefix to packet
+		byte prefix = 0;
+		binaryWriter.Write(prefix);
 
 		// Write data to packet
 		binaryWriter.Write(data);
 	}
 	public void WriteData(int data)
 	{
-		// Write type of data (integer) to packet
-		binaryWriter.Write(1);
+		// Write data type prefix to packet
+		byte prefix = 1;
+		binaryWriter.Write(prefix);
 
 		// Write data to packet
 		binaryWriter.Write(data);
 	}
 	public void WriteData(float data)
 	{
-		// Write type of data (integer) to packet
-		binaryWriter.Write(2);
+		// Write data type prefix to packet
+		byte prefix = 2;
+		binaryWriter.Write(prefix);
 
 		// Write data to packet
 		binaryWriter.Write(data);
 	}
 	public void WriteData(string data)
 	{
-		// Write type of data (integer) to packet
-		binaryWriter.Write(3);
+		// Write data type prefix to packet
+		byte prefix = 3;
+		binaryWriter.Write(prefix);
 
 		// Write length prefix and data to packet
 		binaryWriter.Write(data);
+	}
+	#endregion
+
+	public void ReadData()
+	{
+		
 	}
 
 	/// <summmary>
