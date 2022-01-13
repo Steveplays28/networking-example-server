@@ -22,10 +22,11 @@ public class Server : Node
 	{
 		CreateUdpClient(mainIp, mainPort);
 
-		using (Packet packet = new Packet())
+		using (Packet packet = new Packet(0, 0, 0))
 		{
 			packet.WriteData("hi");
 
+			packet.WritePacketHeader();
 			SendPacket(packet);
 		}
 	}
