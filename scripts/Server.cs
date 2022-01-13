@@ -24,9 +24,9 @@ public class Server : Node
 
 		using (Packet packet = new Packet(0, 0, 0))
 		{
-			packet.WriteData("hi");
-
 			packet.WritePacketHeader();
+			packet.WriteData("hi there :)");
+
 			SendPacket(packet);
 		}
 	}
@@ -53,6 +53,6 @@ public class Server : Node
 	{
 		UdpClient udpClient = (UdpClient)asyncResult.AsyncState;
 
-		GD.Print($"number of bytes sent: {udpClient.EndSend(asyncResult)}");
+		GD.Print($"Amount of bytes sent: {udpClient.EndSend(asyncResult)}");
 	}
 }

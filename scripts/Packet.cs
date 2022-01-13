@@ -3,7 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 
 /// <summary>
-/// Writeable packet, dispose using Dispose() when the packet is no longer in use.
+/// Writeable packet, dispose using <c>Dispose()</c> when the packet is no longer in use.
 /// </summary>
 public class Packet : IDisposable
 {
@@ -41,11 +41,15 @@ public class Packet : IDisposable
 
 	#region WriteData
 	/// <summary>
-	/// Writes a header to the packet (containing the number of the packet, the connected function of the packet, the length of the packet's contents, and a checksum if enabled). <br/>
+	/// Resets the MemoryStream's position to 0, and writes a header to the packet (containing the number of the packet, the connected function of the packet, the length of the packet's contents, and a checksum if enabled). <br/>
 	/// Make sure to do this after all data has been written to the packet!
 	/// </summary>
 	public void WritePacketHeader()
 	{
+		// Reset stream position
+		memoryStream.Position = 0;
+
+		// Write header data to the packet
 		binaryWriter.Write(packetNumber);
 		binaryWriter.Write(connectedFunction);
 		binaryWriter.Write(clientId);
@@ -77,17 +81,6 @@ public class Packet : IDisposable
 	#endregion
 
 	#region ReadData
-	/// <returns>
-	/// Packet number (byte), connected function (byte), client ID (int)
-	/// </returns> 
-	public (byte, byte, int) ReadPacketHeader()
-	{
-		return (binaryReader.ReadByte(), binaryReader.ReadByte(), binaryReader.ReadInt32());
-
-		// Checksum
-		// Read checksum, not implemented yet
-	}
-
 	public bool ReadBoolean()
 	{
 		return binaryReader.ReadBoolean();
