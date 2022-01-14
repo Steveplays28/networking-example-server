@@ -15,6 +15,9 @@ public class Server : Node
 		public IPEndPoint endPoint;
 		public UdpClient udpClient;
 		public int packetCount;
+
+		// Connected clients
+		public Dictionary<int, UdpClient> connectedClients;
 	}
 	public static UdpState udpState = new UdpState();
 
@@ -24,7 +27,7 @@ public class Server : Node
 
 		using (Packet packet = new Packet(0, 0, 0))
 		{
-			packet.WritePacketHeader();
+			// packet.WritePacketHeader();
 			packet.WriteData("hi there :)");
 
 			SendPacket(packet);
@@ -36,6 +39,8 @@ public class Server : Node
 		udpState.endPoint = new IPEndPoint(IPAddress.Parse(ip), port.ToInt());
 		udpState.udpClient = new UdpClient();
 		udpState.packetCount = 0;
+
+		udpState.connectedClients = new Dictionary<int, UdpClient>();
 	}
 
 	public static void SendPacket(Packet packet)
@@ -48,8 +53,29 @@ public class Server : Node
 
 		// Send the message (the destination is defined by the server name and port)
 		udpState.udpClient.BeginSend(packetData, packetData.Length, udpState.endPoint, new AsyncCallback(SendPacketCallback), udpState.udpClient);
+	
+		// TODO: error handling
 	}
 	private static void SendPacketCallback(IAsyncResult asyncResult)
+	{
+		UdpClient udpClient = (UdpClient)asyncResult.AsyncState;
+
+		GD.Print($"Amount of bytes sent: {udpClient.EndSend(asyncResult)}");
+	}
+
+	public static void SendPacketTo(int clientId, Packet packet)
+	{
+		UdpClient udpClient = udpState.connectedClients[clientId];
+
+		// Write packet header
+		packet.WritePacketHeader();
+
+		// Get data from packet
+		byte[] packetData = packet.ReturnData();
+
+		udpClient.BeginSend(packetData, packetData.Length, new AsyncCallback(SendPacketToCallback), udpState.udpClient);
+	}
+	private static void SendPacketToCallback(IAsyncResult asyncResult)
 	{
 		UdpClient udpClient = (UdpClient)asyncResult.AsyncState;
 
