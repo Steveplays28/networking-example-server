@@ -12,6 +12,7 @@ public class Server : Node
 
 	public struct UdpState
 	{
+		// Local (server) endpoint
 		public IPEndPoint endPoint;
 		public UdpClient udpClient;
 		public int packetCount;
@@ -45,8 +46,10 @@ public class Server : Node
 	public static void CreateUdpClient(string ip, string port)
 	{
 		udpState.endPoint = new IPEndPoint(IPAddress.Parse(ip), port.ToInt());
-		udpState.udpClient = new UdpClient();
+		udpState.udpClient = new UdpClient(udpState.endPoint);
 		udpState.packetCount = 0;
+
+		GD.Print(udpState.endPoint.ToString());
 
 		udpState.connectedClients = new Dictionary<int, UdpClient>();
 	}
@@ -120,8 +123,7 @@ public class Server : Node
 	private static void ReceiveCallback(IAsyncResult asyncResult)
 	{
 		// Called when a packet is received
-		IPEndPoint senderEndPoint = new IPEndPoint(IPAddress.Any, int.Parse(mainPort));
-		byte[] receiveBytes = udpState.udpClient.EndReceive(asyncResult, ref senderEndPoint);
+		byte[] receiveBytes = udpState.udpClient.EndReceive(asyncResult, ref udpState.endPoint);
 		udpState.packetCount += 1;
 
 		// Continue listening for packets
@@ -134,14 +136,14 @@ public class Server : Node
 			GD.Print(string.Join(",", receiveBytes));
 
 			// Check if client exists in the savedClients dictionary
-			if (!IsClientSaved(senderEndPoint))
-			{
-				// If not, add the client to the savedClients dictionary
-				int clientId = udpState.savedClients.Count;
-				UdpClient udpClient = new UdpClient(senderEndPoint);
+			// if (!IsClientSaved(senderEndPoint))
+			// {
+			// 	// If not, add the client to the savedClients dictionary
+			// 	int clientId = udpState.savedClients.Count;
+			// 	UdpClient udpClient = new UdpClient(senderEndPoint);
 
-				udpState.savedClients.Add(clientId, udpClient);
-			}
+			// 	udpState.savedClients.Add(clientId, udpClient);
+			// }
 
 			// TODO: check if client exists in connectedClients dictionary
 
@@ -158,12 +160,12 @@ public class Server : Node
 	// Packet callback functions must be static, else they cannot be stored in the packetFunctions dictionary
 	private static void OnConnected(int clientId, Packet packet)
 	{
-		using (Packet newPacket = new Packet(0, 0, clientId))
-		{
-			newPacket.WriteData("hi there :)");
+		// using (Packet newPacket = new Packet(0, 0, clientId))
+		// {
+		// 	newPacket.WriteData("hi there :)");
 
-			SendPacket(newPacket);
-		}
+		// 	SendPacket(newPacket);
+		// }
 	}
 	#endregion
 }
