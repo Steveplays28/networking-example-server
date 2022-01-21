@@ -3,7 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 
 /// <summary>
-/// Writeable packet, dispose using <c>Dispose()</c> when the packet is no longer in use.
+/// Writeable/readable packet, dispose using <c>Dispose()</c> when the packet is no longer in use.
 /// </summary>
 public class Packet : IDisposable
 {
@@ -24,6 +24,8 @@ public class Packet : IDisposable
 		this.packetNumber = packetNumber;
 		this.connectedFunction = connectedFunction;
 		this.clientId = clientId;
+
+		// TODO: Error handling
 	}
 	public Packet(byte[] byteArray)
 	{
@@ -37,6 +39,8 @@ public class Packet : IDisposable
 		packetNumber = ReadByte();
 		connectedFunction = ReadByte();
 		clientId = ReadInt32();
+
+		// TODO: Error handling
 	}
 
 	#region WriteData
