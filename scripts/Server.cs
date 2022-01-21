@@ -55,6 +55,10 @@ public static class Server
 	}
 
 	#region Sending packets
+	/// <summary>
+	/// Sends a packet to all clients.
+	/// </summary>
+	/// <param name="packet">The packet to send.</param>
 	public static async Task<byte[]> SendPacketToAllAsync(Packet packet)
 	{
 		// Write packet header
@@ -113,7 +117,7 @@ public static class Server
 	#endregion
 
 	#region Packet callback functions
-	public static async Task Connect(int clientId, Packet packet)
+	public static async void Connect(int clientId, Packet packet)
 	{
 		// Accept the client's connection request
 		clientId = udpState.savedClients.Count;
