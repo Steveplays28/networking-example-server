@@ -8,8 +8,8 @@ using Godot;
 public static class Server
 {
 	#region Varbiables
-	public static string mainIp = "127.0.0.1";
-	public static string mainPort = "24465";
+	public static string ip = "127.0.0.1";
+	public static string port = "24465";
 
 	public struct UdpState
 	{
@@ -29,23 +29,11 @@ public static class Server
 	// Packet callback functions
 	public static Dictionary<int, Action<int, Packet>> packetFunctions = new Dictionary<int, Action<int, Packet>>()
 	{
-		{ 0, Connect }
+		{ 0, OnConnect }
 	};
 	#endregion
 
-	// public override void _Ready()
-	// {
-	// 	CreateUdpClient(mainIp, mainPort);
-
-	// 	using (Packet packet = new Packet(0, 0, 0))
-	// 	{
-	// 		packet.WriteData("hi there :)");
-
-	// 		SendPacket(packet);
-	// 	}
-	// }
-
-	public static void CreateUdpClient(string ip, string port)
+	public static void CreateUdpClient()
 	{
 		udpState.serverEndPoint = new IPEndPoint(IPAddress.Parse(ip), port.ToInt());
 		udpState.udpClient = new UdpClient();
@@ -59,7 +47,7 @@ public static class Server
 	/// Sends a packet to all clients.
 	/// </summary>
 	/// <param name="packet">The packet to send.</param>
-	public static async Task<byte[]> SendPacketToAllAsync(Packet packet)
+	public static async Task SendPacketToAllAsync(Packet packet)
 	{
 		// Write packet header
 		packet.WritePacketHeader();
@@ -72,8 +60,6 @@ public static class Server
 		{
 			await udpState.udpClient.SendAsync(packetData, packetData.Length, (IPEndPoint)connectedClient.Client.LocalEndPoint);
 		}
-
-		return packetData;
 	}
 	/// <summary>
 	/// Sends a packet to a client.
@@ -81,7 +67,7 @@ public static class Server
 	/// <param name="packet">The packet to send.</param>
 	/// <param name="clientId">The client that the packet should be sent to.</param>
 	/// <returns></returns>
-	public static async Task<byte[]> SendPacketToAsync(int clientId, Packet packet)
+	public static async Task SendPacketToAsync(int clientId, Packet packet)
 	{
 		// Write packet header
 		packet.WritePacketHeader();
@@ -92,13 +78,11 @@ public static class Server
 		// Send the packet to the specified client
 		udpState.connectedClients.TryGetValue(clientId, out UdpClient udpClient);
 		await udpState.udpClient.SendAsync(packetData, packetData.Length, (IPEndPoint)udpClient.Client.LocalEndPoint);
-
-		return packetData;
 	}
 	#endregion
 
 	#region Receiving packets
-	public static async Task<byte[]> ReceivePacketAsync()
+	public static async Task ReceivePacketAsync()
 	{
 		UdpReceiveResult receivedPacket = await udpState.udpClient.ReceiveAsync();
 
@@ -111,13 +95,11 @@ public static class Server
 		{
 			packetFunctions[constructedPacket.connectedFunction].Invoke(constructedPacket.clientId, constructedPacket);
 		}
-
-		return packetData;
 	}
 	#endregion
 
 	#region Packet callback functions
-	public static async void Connect(int clientId, Packet packet)
+	public static async void OnConnect(int clientId, Packet packet)
 	{
 		// Accept the client's connection request
 		clientId = udpState.savedClients.Count;
@@ -133,4 +115,20 @@ public static class Server
 		}
 	}
 	#endregion
+}
+
+public class ServerController : Node
+{
+	public override void _Ready()
+	{
+		Server.ip = "127.0.0.1";
+		Server.port = "24465";
+
+		Server.CreateUdpClient();
+	}
+
+	public override async void _Process(float delta)
+	{
+		await Server.ReceivePacketAsync();
+	}
 }
