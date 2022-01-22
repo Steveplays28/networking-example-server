@@ -33,7 +33,7 @@ public static class Server
 	};
 	#endregion
 
-	public static void CreateUdpClient()
+	public static void StartServer()
 	{
 		udpState.serverEndPoint = new IPEndPoint(IPAddress.Parse(ip), port.ToInt());
 		udpState.udpClient = new UdpClient();
@@ -44,7 +44,7 @@ public static class Server
 
 	#region Sending packets
 	/// <summary>
-	/// Sends a packet to all clients.
+	/// Sends a packet to all clients asynchronously.
 	/// </summary>
 	/// <param name="packet">The packet to send.</param>
 	public static async Task SendPacketToAllAsync(Packet packet)
@@ -62,7 +62,7 @@ public static class Server
 		}
 	}
 	/// <summary>
-	/// Sends a packet to a client.
+	/// Sends a packet to a client asynchronously.
 	/// </summary>
 	/// <param name="packet">The packet to send.</param>
 	/// <param name="clientId">The client that the packet should be sent to.</param>
@@ -124,7 +124,7 @@ public class ServerController : Node
 		Server.ip = "127.0.0.1";
 		Server.port = "24465";
 
-		Server.CreateUdpClient();
+		Server.StartServer();
 	}
 
 	public override async void _Process(float delta)
