@@ -97,7 +97,7 @@ public static class Server
 	public static void ReceivePacket()
 	{
 		// Extract data from the received packet
-		IPEndPoint remoteEndPoint = null;
+		IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
 		byte[] packetData = udpState.udpClient.Receive(ref remoteEndPoint);
 
 		// Construct new Packet object from the received packet
@@ -120,7 +120,8 @@ public static class Server
 	{
 		// Accept the client's connection request
 		int createdClientId = udpState.savedClients.Count;
-		UdpClient connectedClient = new UdpClient(udpState.serverEndPoint);
+		// TODO: Replace UdpClient with IPEndPoint of clients, and pass the IP to the function (maybe with a dynamic argument?)
+		UdpClient connectedClient = new UdpClient();
 		udpState.connectedClients.Add(createdClientId, connectedClient);
 
 		GD.Print($"{printHeader} New client connected from {connectedClient.Client.LocalEndPoint}");
