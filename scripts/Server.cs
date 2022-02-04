@@ -8,7 +8,7 @@ public static class Server
 {
 	#region Varbiables
 	public static string ip = "127.0.0.1";
-	public static string port = "24466";
+	public static string port = "24463";
 
 	// Header for GD.Print() messages, default = "[Server]:"
 	public static string printHeader = "[Server]:";
@@ -43,9 +43,11 @@ public static class Server
 		udpState.serverEndPoint = new IPEndPoint(IPAddress.Parse(ip), port.ToInt());
 		udpState.udpClient = new UdpClient(udpState.serverEndPoint);
 		udpState.packetCount = 0;
-		udpState.serverId = -1;
 
+		udpState.serverId = -1;
+		udpState.allClientsId = -1;
 		udpState.connectedClients = new Dictionary<int, UdpClient>();
+		udpState.savedClients = new Dictionary<int, UdpClient>();
 
 		GD.Print($"{printHeader} Server started on {udpState.serverEndPoint}.");
 	}
@@ -107,7 +109,7 @@ public static class Server
 			}
 			else
 			{
-				GD.PrintErr($"{printHeader} Received a recipientId of {constructedPacket.recipientId}, which isn't equal to the serverId of {udpState.serverId}! Something has gone wrong. (line 104)");
+				GD.PrintErr($"{printHeader} Received a recipientId of {constructedPacket.recipientId}, which isn't equal to the serverId of {udpState.serverId}!");
 			}
 		}
 	}
@@ -135,4 +137,6 @@ public static class Server
 		}
 	}
 	#endregion
+
+	// TODO: Close socket properly... how did I forget this
 }
