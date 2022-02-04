@@ -10,8 +10,8 @@ public class ServerController : Node
 		Server.StartServer();
 	}
 
-	public override async void _Process(float delta)
+	public override void _Process(float delta)
 	{
-		await Server.ReceivePacketAsync();
+		Server.ReceivePacket();
 	}
 }
