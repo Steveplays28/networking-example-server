@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using Godot;
 
 public static class Server
@@ -25,9 +26,9 @@ public static class Server
 		// The ID used to send packets to newly connected clients or all clients, default = -1
 		public int allClientsId;
 		// Connected clients
-		public Dictionary<int, UdpClient> connectedClients;
+		public Dictionary<int, IPEndPoint> connectedClients;
 		// Saved clients
-		public Dictionary<int, UdpClient> savedClients;
+		public Dictionary<int, IPEndPoint> savedClients;
 	}
 	public static UdpState udpState = new UdpState();
 
@@ -46,8 +47,13 @@ public static class Server
 
 		udpState.serverId = -1;
 		udpState.allClientsId = -1;
-		udpState.connectedClients = new Dictionary<int, UdpClient>();
-		udpState.savedClients = new Dictionary<int, UdpClient>();
+		udpState.connectedClients = new Dictionary<int, IPEndPoint>();
+		udpState.savedClients = new Dictionary<int, IPEndPoint>();
+
+		// Create and start a UDP receive thread for Server.ReceivePacket(), so it doesn't block Godot's main thread
+		System.Threading.Thread udpReceiveThread = new System.Threading.Thread(new ThreadStart(ReceivePacket));
+		udpReceiveThread.Name = "UDP receive thread";
+		udpReceiveThread.Start();
 
 		GD.Print($"{printHeader} Server started on {udpState.serverEndPoint}.");
 	}
@@ -68,9 +74,9 @@ public static class Server
 		byte[] packetData = packet.ReturnData();
 
 		// Send the packet to all connected clients
-		foreach (UdpClient connectedClient in udpState.connectedClients.Values)
+		foreach (IPEndPoint connectedClient in udpState.connectedClients.Values)
 		{
-			udpState.udpClient.Send(packetData, packetData.Length, (IPEndPoint)connectedClient.Client.LocalEndPoint);
+			udpState.udpClient.Send(packetData, packetData.Length, connectedClient);
 		}
 	}
 	/// <summary>
@@ -88,28 +94,35 @@ public static class Server
 		byte[] packetData = packet.ReturnData();
 
 		// Send the packet to the specified client
-		udpState.connectedClients.TryGetValue(packet.recipientId, out UdpClient udpClient);
-		udpState.udpClient.Send(packetData, packetData.Length, (IPEndPoint)udpClient.Client.LocalEndPoint);
+		if (udpState.connectedClients.TryGetValue(packet.recipientId, out IPEndPoint connectedClient))
+		{
+			udpState.udpClient.Send(packetData, packetData.Length, connectedClient);
+		}
 	}
 	#endregion
 
 	#region Receiving packets
 	public static void ReceivePacket()
 	{
-		// Extract data from the received packet
-		IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
-		byte[] packetData = udpState.udpClient.Receive(ref remoteEndPoint);
-
-		// Construct new Packet object from the received packet
-		using (Packet constructedPacket = new Packet(packetData))
+		while (true)
 		{
-			if (constructedPacket.recipientId == udpState.serverId)
+			System.Threading.Thread.Sleep(17);
+
+			// Extract data from the received packet
+			IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
+			byte[] packetData = udpState.udpClient.Receive(ref remoteEndPoint);
+
+			// Construct new Packet object from the received packet
+			using (Packet constructedPacket = new Packet(packetData))
 			{
-				packetFunctions[constructedPacket.connectedFunction].Invoke(constructedPacket);
-			}
-			else
-			{
-				GD.PrintErr($"{printHeader} Received a recipientId of {constructedPacket.recipientId}, which isn't equal to the serverId of {udpState.serverId}!");
+				if (constructedPacket.recipientId == udpState.serverId)
+				{
+					packetFunctions[constructedPacket.connectedFunction].Invoke(constructedPacket);
+				}
+				else
+				{
+					GD.PrintErr($"{printHeader} Received a recipientId of {constructedPacket.recipientId}, which isn't equal to the serverId of {udpState.serverId}!");
+				}
 			}
 		}
 	}
@@ -119,18 +132,19 @@ public static class Server
 	public static void OnConnect(Packet packet)
 	{
 		// Accept the client's connection request
+		string connectedClientIP = packet.ReadString();
+		IPEndPoint connectedClientIPEndPoint = new IPEndPoint(connectedClientIP.Split(":")[0].ToInt(), connectedClientIP.Split(":")[1].ToInt());
 		int createdClientId = udpState.savedClients.Count;
-		// TODO: Replace UdpClient with IPEndPoint of clients, and pass the IP to the function (maybe with a dynamic argument?)
-		UdpClient connectedClient = new UdpClient();
-		udpState.connectedClients.Add(createdClientId, connectedClient);
 
-		GD.Print($"{printHeader} New client connected from {connectedClient.Client.LocalEndPoint}");
+		// TODO: Replace UdpClient with IPEndPoint of clients, and pass the IP to the function (maybe with a dynamic argument?)
+		udpState.connectedClients.Add(createdClientId, connectedClientIPEndPoint);
+		GD.Print($"{printHeader} New client connected from {connectedClientIPEndPoint}");
 
 		// Send a new packet back to the newly connected client
 		using (Packet newPacket = new Packet(0, 0, udpState.serverId, createdClientId))
 		{
 			// Write the recipient's IP address back to them
-			newPacket.WriteData(connectedClient.Client.LocalEndPoint.ToString());
+			newPacket.WriteData(connectedClientIPEndPoint.ToString());
 			// TODO: Check if sending the IP is safe... because it's probably very unsafe
 
 			// Write welcome message to the packet
