@@ -12,3 +12,9 @@ data_*/
 
 # MacOS-specific ignores
 *.DS_Store
+
+# Build folder
+builds/
+
+# Log files
+*.log
