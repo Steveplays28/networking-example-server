@@ -16,7 +16,7 @@ public class ServerController : Node
 	{
 		// Server.ReceivePacket();
 
-		if (Input.IsActionJustReleased("ui_end"))
+		if (Input.IsActionJustReleased("ui_cancel"))
 		{
 			GetTree().Quit();
 		}
