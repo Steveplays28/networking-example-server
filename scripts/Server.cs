@@ -41,7 +41,7 @@ public static class Server
 	public static void StartServer()
 	{
 		udpState.serverEndPoint = new IPEndPoint(IPAddress.Parse(ip), port.ToInt());
-		udpState.udpClient = new UdpClient();
+		udpState.udpClient = new UdpClient(udpState.serverEndPoint);
 		udpState.packetCount = 0;
 		udpState.serverId = -1;
 
