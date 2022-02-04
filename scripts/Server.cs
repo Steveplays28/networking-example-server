@@ -44,10 +44,10 @@ public static class Server
 
 	#region Sending packets
 	/// <summary>
-	/// Sends a packet to all clients asynchronously.
+	/// Sends a packet to all clients.
 	/// </summary>
 	/// <param name="packet">The packet to send.</param>
-	public static async Task SendPacketToAllAsync(Packet packet)
+	public static void SendPacketToAll(Packet packet)
 	{
 		// Write packet header
 		packet.WritePacketHeader();
@@ -58,16 +58,16 @@ public static class Server
 		// Send the packet to all connected clients
 		foreach (UdpClient connectedClient in udpState.connectedClients.Values)
 		{
-			await udpState.udpClient.SendAsync(packetData, packetData.Length, (IPEndPoint)connectedClient.Client.LocalEndPoint);
+			udpState.udpClient.Send(packetData, packetData.Length, (IPEndPoint)connectedClient.Client.LocalEndPoint);
 		}
 	}
 	/// <summary>
-	/// Sends a packet to a client asynchronously.
+	/// Sends a packet to a client.
 	/// </summary>
 	/// <param name="packet">The packet to send.</param>
 	/// <param name="clientId">The client that the packet should be sent to.</param>
 	/// <returns></returns>
-	public static async Task SendPacketToAsync(int clientId, Packet packet)
+	public static void SendPacketTo(int clientId, Packet packet)
 	{
 		// Write packet header
 		packet.WritePacketHeader();
@@ -77,18 +77,16 @@ public static class Server
 
 		// Send the packet to the specified client
 		udpState.connectedClients.TryGetValue(clientId, out UdpClient udpClient);
-		await udpState.udpClient.SendAsync(packetData, packetData.Length, (IPEndPoint)udpClient.Client.LocalEndPoint);
+		udpState.udpClient.Send(packetData, packetData.Length, (IPEndPoint)udpClient.Client.LocalEndPoint);
 	}
 	#endregion
 
 	#region Receiving packets
-	public static async Task ReceivePacketAsync()
+	public static void ReceivePacket()
 	{
-		UdpReceiveResult receivedPacket = await udpState.udpClient.ReceiveAsync();
-
 		// Extract data from the received packet
-		byte[] packetData = receivedPacket.Buffer;
-		IPEndPoint remoteEndPoint = receivedPacket.RemoteEndPoint;
+		IPEndPoint remoteEndPoint = null;
+		byte[] packetData = udpState.udpClient.Receive(ref remoteEndPoint);
 
 		// Construct new Packet object from the received packet
 		using (Packet constructedPacket = new Packet(packetData))
@@ -99,7 +97,7 @@ public static class Server
 	#endregion
 
 	#region Packet callback functions
-	public static async void OnConnect(int clientId, Packet packet)
+	public static void OnConnect(int clientId, Packet packet)
 	{
 		// Accept the client's connection request
 		clientId = udpState.savedClients.Count;
@@ -113,7 +111,7 @@ public static class Server
 			newPacket.WriteData("Hello, this is the message of the day! :)");
 			// GD.Print(string.Join(",", newPacket.ReturnData()));
 
-			await SendPacketToAsync(clientId, newPacket);
+			SendPacketTo(clientId, newPacket);
 		}
 	}
 	#endregion
