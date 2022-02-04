@@ -8,7 +8,7 @@ public static class Server
 {
 	#region Varbiables
 	public static string ip = "127.0.0.1";
-	public static string port = "24463";
+	public static string port = "24464";
 
 	// Header for GD.Print() messages, default = "[Server]:"
 	public static string printHeader = "[Server]:";
@@ -123,6 +123,8 @@ public static class Server
 		UdpClient connectedClient = new UdpClient(udpState.serverEndPoint);
 		udpState.connectedClients.Add(createdClientId, connectedClient);
 
+		GD.Print($"{printHeader} New client connected from {connectedClient.Client.LocalEndPoint}");
+
 		// Send a new packet back to the newly connected client
 		using (Packet newPacket = new Packet(0, 0, udpState.serverId, createdClientId))
 		{
@@ -138,5 +140,16 @@ public static class Server
 	}
 	#endregion
 
-	// TODO: Close socket properly... how did I forget this
+	public static void CloseUdpClient()
+	{
+		try
+		{
+			udpState.udpClient.Close();
+			GD.Print($"{printHeader} Successfully closed the UdpClient!");
+		}
+		catch (SocketException e)
+		{
+			GD.PrintErr($"{printHeader} Failed closing the UdpClient: {e}");
+		}
+	}
 }
