@@ -14,8 +14,6 @@ public class ServerController : Node
 
 	public override void _Process(float delta)
 	{
-		// Server.ReceivePacket();
-
 		if (Input.IsActionJustReleased("ui_cancel"))
 		{
 			GetTree().Quit();
