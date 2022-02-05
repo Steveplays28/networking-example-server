@@ -4,7 +4,7 @@ public class ServerController : Node
 {
 	public override void _Ready()
 	{
-		// Set endpoint to run the server on
+		// Set the endpoint to run the server on
 		Server.ip = "127.0.0.1";
 		Server.port = "24476";
 
