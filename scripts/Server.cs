@@ -57,6 +57,7 @@ public static class Server
 			IsBackground = true
 		};
 		udpReceiveThread.Start();
+		// TODO: Server start try catch block
 
 		GD.Print($"{printHeader} Server started on {udpState.serverEndPoint}.");
 	}
