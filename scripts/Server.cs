@@ -33,7 +33,7 @@ public static class Server
 	public static UdpState udpState = new UdpState();
 
 	// Packet callback functions
-	public static Dictionary<int, Action<Packet>> packetFunctions = new Dictionary<int, Action<Packet>>()
+	public static Dictionary<int, Action<Packet, IPEndPoint>> packetFunctions = new Dictionary<int, Action<Packet, IPEndPoint>>()
 	{
 		{ 0, OnConnect }
 	};
@@ -51,8 +51,11 @@ public static class Server
 		udpState.savedClients = new Dictionary<int, IPEndPoint>();
 
 		// Create and start a UDP receive thread for Server.ReceivePacket(), so it doesn't block Godot's main thread
-		System.Threading.Thread udpReceiveThread = new System.Threading.Thread(new ThreadStart(ReceivePacket));
-		udpReceiveThread.Name = "UDP receive thread";
+		System.Threading.Thread udpReceiveThread = new System.Threading.Thread(new ThreadStart(ReceivePacket))
+		{
+			Name = "UDP receive thread",
+			IsBackground = true
+		};
 		udpReceiveThread.Start();
 
 		GD.Print($"{printHeader} Server started on {udpState.serverEndPoint}.");
@@ -117,7 +120,7 @@ public static class Server
 			{
 				if (constructedPacket.recipientId == udpState.serverId)
 				{
-					packetFunctions[constructedPacket.connectedFunction].Invoke(constructedPacket);
+					packetFunctions[constructedPacket.connectedFunction].Invoke(constructedPacket, remoteEndPoint);
 				}
 				else
 				{
@@ -129,22 +132,18 @@ public static class Server
 	#endregion
 
 	#region Packet callback functions
-	public static void OnConnect(Packet packet)
+	public static void OnConnect(Packet packet, IPEndPoint ipEndPoint)
 	{
 		// Accept the client's connection request
-		string connectedClientIP = packet.ReadString();
-		IPEndPoint connectedClientIPEndPoint = new IPEndPoint(connectedClientIP.Split(":")[0].ToInt(), connectedClientIP.Split(":")[1].ToInt());
 		int createdClientId = udpState.savedClients.Count;
-
-		// TODO: Replace UdpClient with IPEndPoint of clients, and pass the IP to the function (maybe with a dynamic argument?)
-		udpState.connectedClients.Add(createdClientId, connectedClientIPEndPoint);
-		GD.Print($"{printHeader} New client connected from {connectedClientIPEndPoint}");
+		udpState.connectedClients.Add(createdClientId, ipEndPoint);
+		GD.Print($"{printHeader} New client connected from {ipEndPoint}.");
 
 		// Send a new packet back to the newly connected client
 		using (Packet newPacket = new Packet(0, 0, udpState.serverId, createdClientId))
 		{
 			// Write the recipient's IP address back to them
-			newPacket.WriteData(connectedClientIPEndPoint.ToString());
+			newPacket.WriteData(ipEndPoint.ToString());
 			// TODO: Check if sending the IP is safe... because it's probably very unsafe
 
 			// Write welcome message to the packet
