@@ -136,7 +136,7 @@ public static class Server
 	public static void OnConnect(Packet packet, IPEndPoint ipEndPoint)
 	{
 		// Accept the client's connection request
-		int createdClientId = udpState.savedClients.Count;
+		int createdClientId = udpState.connectedClients.Count;
 		udpState.connectedClients.Add(createdClientId, ipEndPoint);
 		GD.Print($"{printHeader} New client connected from {ipEndPoint}.");
 
