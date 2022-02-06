@@ -151,6 +151,7 @@ public static class Server
 			newPacket.WriteData("Hello, this is the message of the day! :)");
 
 			SendPacketTo(newPacket);
+			// TODO: Fix bug where the packet is not sent
 		}
 	}
 	#endregion
