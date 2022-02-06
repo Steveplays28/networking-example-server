@@ -150,7 +150,7 @@ public static class Server
 			// Write welcome message to the packet
 			newPacket.WriteData("Hello, this is the message of the day! :)");
 
-			// SendPacketTo(newPacket);
+			SendPacketTo(newPacket);
 		}
 	}
 	#endregion
