@@ -4,16 +4,16 @@ public class ServerController : Node
 {
 	public static ServerController instance;
 
+	[Signal]
+	public delegate void OnConnected(int clientId, string messageOfTheDay);
+
 	public override void _Ready()
 	{
-		if (instance == null)
-		{
-			instance = this;
-		}
-		else
+		if (instance != null)
 		{
 			GD.PushWarning("ServerController instance is already set, overriding!");
 		}
+		instance = this;
 
 		// Set the endpoint to run the server on
 		Server.ip = "127.0.0.1";

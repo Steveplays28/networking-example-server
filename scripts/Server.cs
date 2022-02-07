@@ -133,16 +133,21 @@ public static class Server
 		udpState.connectedClientsIpToId.Add(ipEndPoint, createdClientId);
 		// TODO: Check if client isn't already connected
 
+		string messageOfTheDay = "Hello, this is the message of the day! :)";
+
 		// Send a new packet back to the newly connected client
 		using (Packet newPacket = new Packet(0, 0))
 		{
-			// Write message of the day to the packet
-			newPacket.WriteData("Hello, this is the message of the day! :)");
+			// Write the client ID to the packet
+			newPacket.WriteData(createdClientId);
+
+			// Write the message of the day to the packet
+			newPacket.WriteData(messageOfTheDay);
 
 			SendPacketTo(newPacket, udpState.connectedClientsIpToId[ipEndPoint]);
 		}
 
-		ServerController.instance.EmitSignal("OnConnected");
+		ServerController.instance.EmitSignal(nameof(ServerController.OnConnected), createdClientId, messageOfTheDay);
 		GD.Print($"{printHeader} New client connected from {ipEndPoint}.");
 	}
 	#endregion
