@@ -9,14 +9,12 @@ public class Packet : IDisposable
 {
 	public byte packetNumber;
 	public byte connectedFunction;
-	public int senderId;
-	public int recipientId;
 
 	private MemoryStream memoryStream;
 	private BinaryWriter binaryWriter;
 	private BinaryReader binaryReader;
 
-	public Packet(byte packetNumber, byte connectedFunction, int senderId, int recipientId)
+	public Packet(byte packetNumber, byte connectedFunction)
 	{
 		memoryStream = new MemoryStream();
 		binaryWriter = new BinaryWriter(memoryStream);
@@ -24,8 +22,6 @@ public class Packet : IDisposable
 
 		this.packetNumber = packetNumber;
 		this.connectedFunction = connectedFunction;
-		this.senderId = senderId;
-		this.recipientId = recipientId;
 
 		// TODO: Error handling
 	}
@@ -40,8 +36,6 @@ public class Packet : IDisposable
 
 		packetNumber = ReadByte();
 		connectedFunction = ReadByte();
-		senderId = ReadInt32();
-		recipientId = ReadInt32();
 
 		// TODO: Error handling
 	}
@@ -60,8 +54,6 @@ public class Packet : IDisposable
 		// Write header data to the new MemoryStream
 		newBinaryWriter.Write(packetNumber);
 		newBinaryWriter.Write(connectedFunction);
-		newBinaryWriter.Write(senderId);
-		newBinaryWriter.Write(recipientId);
 
 		// Copy the old MemoryStream to the new MemoryStream, and update the memoryStream variable
 		memoryStream.Position = 0;
