@@ -6,6 +6,8 @@ public class ServerController : Node
 
 	[Signal]
 	public delegate void OnConnected(int clientId, string messageOfTheDay);
+	[Signal]
+	public delegate void OnDisconnected();
 
 	public override void _Ready()
 	{

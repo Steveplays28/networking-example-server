@@ -28,13 +28,17 @@ public static class Server
 		// Saved clients
 		public Dictionary<IPEndPoint, int> savedClientsIpToId;
 		public Dictionary<int, IPEndPoint> savedClientsIdToIp;
+
+		// Track when every client sent their last packet
+		public Dictionary<int, int> clientIdToLastPacketTime;
 	}
 	public static UdpState udpState = new UdpState();
 
 	// Packet callback functions
 	public static Dictionary<int, Action<Packet, IPEndPoint>> packetFunctions = new Dictionary<int, Action<Packet, IPEndPoint>>()
 	{
-		{ 0, OnConnect }
+		{ 0, OnConnect },
+		{ 1, OnDisconnect }
 	};
 	#endregion
 
@@ -125,7 +129,7 @@ public static class Server
 	#endregion
 
 	#region Packet callback functions
-	public static void OnConnect(Packet packet, IPEndPoint ipEndPoint)
+	private static void OnConnect(Packet packet, IPEndPoint ipEndPoint)
 	{
 		// Accept the client's connection request
 		int createdClientId = udpState.connectedClientsIdToIp.Count;
@@ -149,6 +153,22 @@ public static class Server
 
 		ServerController.instance.EmitSignal(nameof(ServerController.OnConnected), createdClientId, messageOfTheDay);
 		GD.Print($"{printHeader} New client connected from {ipEndPoint}.");
+	}
+
+	private static void OnDisconnect(Packet packet, IPEndPoint ipEndPoint)
+	{
+		// Remove the client from the connectedClients dictionaries
+		udpState.connectedClientsIdToIp.Remove(udpState.connectedClientsIpToId[ipEndPoint]);
+		udpState.connectedClientsIpToId.Remove(ipEndPoint);
+
+		// Send a disconnect confirmation packet back to the client
+		using (Packet newPacket = new Packet(0, 1))
+		{
+			SendPacketTo(newPacket, udpState.connectedClientsIpToId[ipEndPoint]);
+		}
+
+		ServerController.instance.EmitSignal(nameof(ServerController.OnDisconnected));
+		GD.Print($"{printHeader} Client {ipEndPoint} disconnected.");
 	}
 	#endregion
 
