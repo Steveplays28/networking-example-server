@@ -157,18 +157,28 @@ public static class Server
 
 	private static void OnDisconnect(Packet packet, IPEndPoint ipEndPoint)
 	{
-		// Remove the client from the connectedClients dictionaries
-		udpState.connectedClientsIdToIp.Remove(udpState.connectedClientsIpToId[ipEndPoint]);
-		udpState.connectedClientsIpToId.Remove(ipEndPoint);
-
-		// Send a disconnect confirmation packet back to the client
-		using (Packet newPacket = new Packet(0, 1))
+		// Check if client exists in the connectedClients dictionaries
+		if (udpState.connectedClientsIdToIp.ContainsKey(udpState.connectedClientsIpToId[ipEndPoint]) || udpState.connectedClientsIpToId.ContainsKey(ipEndPoint))
 		{
-			SendPacketTo(newPacket, udpState.connectedClientsIpToId[ipEndPoint]);
-		}
+			// Send a disconnect confirmation packet back to the client
+			using (Packet newPacket = new Packet(0, 1))
+			{
+				SendPacketTo(newPacket, udpState.connectedClientsIpToId[ipEndPoint]);
+			}
 
-		ServerController.instance.EmitSignal(nameof(ServerController.OnDisconnected));
-		GD.Print($"{printHeader} Client {ipEndPoint} disconnected.");
+			// Remove the client from the connectedClients dictionaries
+			if (udpState.connectedClientsIdToIp.ContainsKey(udpState.connectedClientsIpToId[ipEndPoint]))
+			{
+				udpState.connectedClientsIdToIp.Remove(udpState.connectedClientsIpToId[ipEndPoint]);
+			}
+			if (udpState.connectedClientsIpToId.ContainsKey(ipEndPoint))
+			{
+				udpState.connectedClientsIpToId.Remove(ipEndPoint);
+			}
+
+			ServerController.instance.EmitSignal(nameof(ServerController.OnDisconnected));
+			GD.Print($"{printHeader} Client {ipEndPoint} disconnected.");
+		}
 	}
 	#endregion
 
