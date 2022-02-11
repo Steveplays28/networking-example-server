@@ -151,7 +151,7 @@ public static class Server
 			SendPacketTo(newPacket, udpState.connectedClientsIpToId[ipEndPoint]);
 		}
 
-		ServerController.instance.EmitSignal(nameof(ServerController.OnConnected), createdClientId, messageOfTheDay);
+		ServerController.instance.EmitSignal(nameof(ServerController.Connected), createdClientId, messageOfTheDay);
 		GD.Print($"{printHeader} New client connected from {ipEndPoint}.");
 	}
 
@@ -176,7 +176,7 @@ public static class Server
 				udpState.connectedClientsIpToId.Remove(ipEndPoint);
 			}
 
-			ServerController.instance.EmitSignal(nameof(ServerController.OnDisconnected));
+			ServerController.instance.EmitSignal(nameof(ServerController.Disconnected));
 			GD.Print($"{printHeader} Client {ipEndPoint} disconnected.");
 		}
 	}
